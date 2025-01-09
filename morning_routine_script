@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Morning Routine</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f0f8ff;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    #routine-container {
+      margin-top: 20px;
+      width: 90%;
+      max-width: 1200px;
+      background: #fff;
+      border-radius: 10px;
+      padding: 20px;
+      box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.2);
+    }
+    h1 {
+      text-align: center;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+    h1 span {
+      margin-left: 10px;
+    }
+    .dots {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      font-size: 24px;
+      cursor: pointer;
+    }
+    .kids-grid {
+      display: flex;
+      flex-wrap: nowrap;
+      gap: 20px;
+      overflow-x: auto;
+    }
+    .kid {
+      background: #e6f7ff;
+      padding: 15px;
+      border-radius: 10px;
+      text-align: center;
+      min-width: 200px;
+      box-shadow: 0px 2px 6px rgba(0, 0, 0, 0.1);
+    }
+    .kid h3 {
+      margin: 0 0 10px 0;
+    }
+    .task {
+      margin: 10px 0;
+    }
+    .task button {
+      width: 100%;
+      background: #f0f0f0;
+      color: #333;
+      border: none;
+      border-radius: 5px;
+      padding: 10px;
+      cursor: pointer;
+      font-size: 14px;
+      transition: background-color 0.3s, color 0.3s;
+    }
+    .task button:hover {
+      background: #ddd;
+    }
+    .task button.done {
+      background: #a4e6a3;
+      color: #fff;
+      font-weight: bold;
+    }
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.5);
+      justify-content: center;
+      align-items: center;
+    }
+    .modal-content {
+      background: #fff;
+      padding: 20px;
+      border-radius: 10px;
+      text-align: center;
+    }
+    .modal-content button {
+      margin: 10px;
+    }
+  </style>
+</head>
+<body>
+  <div class="dots" onclick="openModal()">&#x22EE;</div>
+  <div id="routine-container">
+    <h1>Morning Routine <span>☀️</span></h1>
+    <div class="kids-grid" id="kids-list"></div>
+  </div>
+  <div class="modal" id="modal">
+    <div class="modal-content">
+      <h2>Password</h2>
+      <input type="password" id="password" placeholder="Enter password">
+      <button onclick="checkPassword()">Submit</button>
+      <button onclick="closeModal()">Close</button>
+      <div id="manage-buttons" style="display: none;">
+        <input type="text" id="kid-name" placeholder="Enter kid's name">
+        <button id="add-kid-btn">Add Kid</button>
+        <button id="remove-kid-btn">Remove Last Kid</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const defaultTasks = ["Wake up 🌅", "Brush teeth 🛁", "Get dressed 👗", "Eat breakfast 🥞", "Pack bag 🎒"];
+    const password = "7247";
+    let kids = JSON.parse(localStorage.getItem("kids")) || [];
+
+    function saveState() {
+      localStorage.setItem("kids", JSON.stringify(kids));
+    }
+
+    function renderKids() {
+      const kidsList = document.getElementById("kids-list");
+      kidsList.innerHTML = "";
+      kids.forEach((kid, kidIndex) => {
+        const kidDiv = document.createElement("div");
+        kidDiv.className = "kid";
+        kidDiv.innerHTML = `
+          <h3>${kid.name}</h3>
+          ${kid.tasks
+            .map((task, taskIndex) => `
+              <div class="task">
+                <button 
+                  class="${task.done ? "done" : ""}" 
+                  onclick="toggleTask(${kidIndex}, ${taskIndex})">
+                  ${task.done ? "✅ " : ""}${task.name}
+                </button>
+              </div>
+            `)
+            .join("")}
+        `;
+        kidsList.appendChild(kidDiv);
+      });
+    }
+
+    function toggleTask(kidIndex, taskIndex) {
+      kids[kidIndex].tasks[taskIndex].done = !kids[kidIndex].tasks[taskIndex].done;
+      saveState();
+      renderKids();
+    }
+
+    function addKid() {
+      const kidName = document.getElementById("kid-name").value || `Kid ${kids.length + 1}`;
+      kids.push({
+        name: kidName,
+        tasks: defaultTasks.map((task) => ({ name: task, done: false })),
+      });
+      saveState();
+      renderKids();
+      document.getElementById("kid-name").value = ""; // Clear input field
+    }
+
+    function removeKid() {
+      if (kids.length > 0) {
+        kids.pop();
+        saveState();
+        renderKids();
+      } else {
+        alert("No kids to remove!");
+      }
+    }
+
+    function openModal() {
+      document.getElementById("modal").style.display = "flex";
+    }
+
+    function closeModal() {
+      document.getElementById("modal").style.display = "none";
+    }
+
+    function checkPassword() {
+      const enteredPassword = document.getElementById("password").value;
+      if (enteredPassword === password) {
+        document.getElementById("manage-buttons").style.display = "block";
+        document.getElementById("add-kid-btn").onclick = addKid; // Attach event
+        document.getElementById("remove-kid-btn").onclick = removeKid; // Attach event
+      } else {
+        alert("Incorrect password!");
+      }
+    }
+
+    renderKids();
+  </script>
+</body>
+</html>
